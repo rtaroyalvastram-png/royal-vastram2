@@ -1,0 +1,48 @@
+# Royal Vastram - Client Setup Guide
+
+Welcome! Follow these simple steps to set up the Billing Application on your shop computer.
+
+## Part 1: Install Software (One-Time Only)
+Please download and install the following 3 softwares. Just click "Next" -> "Next" -> "Finish" for all of them.
+
+### 1. Install Git
+- **Download Link**: [https://git-scm.com/download/win](https://git-scm.com/download/win)
+- *Why?*: This connects your app to our updates so you always have features.
+
+### 2. Install Python
+- **Download Link**: [https://www.python.org/downloads/](https://www.python.org/downloads/)
+- **CRITICAL STEP**: When installing, you MUST check the box **"Add Python to PATH"** at the bottom of the first screen.
+- *Why?*: This runs the backend logic.
+
+### 3. Install Node.js
+- **Download Link**: [https://nodejs.org/en/download/prebuilt-installer](https://nodejs.org/en/download/prebuilt-installer)
+- *Why?*: This powers the visual interface of the app.
+
+---
+
+## Part 2: Get the App (One-Time Only)
+1.  Open your **Command Prompt** (search for `cmd` in Windows).
+2.  Type the following command and press Enter (this puts the app on your Desktop):
+    ```powershell
+    cd Desktop
+    git clone https://github.com/rtaroyalvastram-png/royal-vastram.git royalvastram
+    ```
+    *(If it asks for a username/password, contact your developer).*
+
+---
+
+## Part 3: Daily Usage
+1.  Go to the `royalvastram` folder on your Desktop.
+2.  Double-click the file named **`start_royal_vastram.bat`**.
+3.  A black window will appear. **Do not close it.**
+    *   It will automatically check for updates.
+    *   It will start the server.
+    *   It will open your browser to the Billing Page.
+4.  Minimise the black window and start billing!
+
+---
+
+## Troubleshooting
+- **"Python not found"**: You likely forgot to check "Add to PATH" during installation. Re-install Python and check that box.
+- **"git is not recognized"**: You need to install Git from the link above.
+- **Updates failed**: Check your internet connection. The app will still open with the version you have.

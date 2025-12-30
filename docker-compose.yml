@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: ./backend
+    container_name: royal_backend
+    volumes:
+      - ./backend/billing.db:/app/billing.db
+      - ./backend/invoices:/app/invoices
+    restart: unless-stopped
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: royal_frontend
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: royal_nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/.htpasswd:/etc/nginx/.htpasswd
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped

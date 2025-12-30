@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Javascript
+node_modules/
+dist/
+build/
+.DS_Store
+
+# Database
+# billing.db # Commented out: keeping local DB for ease of initial deploy, but usually ignored.
+*.sqlite3
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+.qodo/
