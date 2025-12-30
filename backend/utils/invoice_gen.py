@@ -56,16 +56,21 @@ def create_invoice_image(bill):
         # --- 1. HEADER SECTION ---
         # Logo (if exists)
         try:
+            # Locate logo relative to this file: backend/utils/invoice_gen.py -> .../frontend/public/logo.jpg
+            # Go up 3 levels: utils -> backend -> root
             base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             logo_path = os.path.join(base_dir, "frontend", "public", "logo.jpg")
+            
+            print(f"DEBUG: Looking for logo at: {logo_path}")
             if os.path.exists(logo_path):
                 logo = Image.open(logo_path)
                 logo.thumbnail((180, 180))
-                # Center logo relative to text or place left? 
-                # CSS says: absolute left-8. We'll place it at padding-left.
                 img.paste(logo, (padding, 40))
-        except:
-            pass
+                print("DEBUG: Logo pasted successfully.")
+            else:
+                print("DEBUG: Logo file not found.")
+        except Exception as e:
+            print(f"DEBUG: Error loading logo: {e}")
 
         # Text (Centered)
         center_x = width // 2

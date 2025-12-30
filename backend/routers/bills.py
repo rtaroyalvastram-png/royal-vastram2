@@ -32,7 +32,38 @@ def send_whatsapp_task(bill_id: int, phone: str, message: str, bill_obj=None):
         import win32clipboard
         from PIL import Image
         from io import BytesIO
+        from io import BytesIO
         from urllib.parse import quote
+        import subprocess
+
+        def focus_whatsapp_window():
+            """
+            Attempts to bring the WhatsApp Web browser window to the foreground using PowerShell.
+            Checks for common browser processes with 'WhatsApp' in the title.
+            """
+            try:
+                print("Attempting to focus WhatsApp window...")
+                ps_script = """
+                $w = New-Object -ComObject WScript.Shell
+                $proc = Get-Process | Where-Object { $_.MainWindowTitle -like '*WhatsApp*' } | Select-Object -First 1
+                if ($proc) { 
+                    $w.AppActivate($proc.Id) 
+                    Write-Output "FOCUSED_PID:$($proc.Id)"
+                } else {
+                    Write-Output "WhatsApp window not found"
+                }
+                """
+                result = subprocess.run(["powershell", "-Command", ps_script], capture_output=True, text=True)
+                output = result.stdout.strip()
+                print(f"Focus Result: {output}")
+                
+                if "FOCUSED_PID" in output:
+                    time.sleep(1) # Allow transition
+                    return True
+                return False
+            except Exception as e:
+                print(f"Focus Script Error: {e}")
+                return False
 
         # Phone must have country code. Standardizing to +91 if missing
         phone = phone.strip()
@@ -83,6 +114,10 @@ def send_whatsapp_task(bill_id: int, phone: str, message: str, bill_obj=None):
             
             # 4. Paste Image
             print("Pasting image...")
+            
+            # FORCE FOCUS BEFORE PASTING
+            focus_whatsapp_window()
+            
             # Click to ensure focus on the message box
             # We assume the chat box is focused by default on load, but a click helps.
             # Clicking center of screen usually hits the chat window or background (safe)
@@ -102,13 +137,18 @@ def send_whatsapp_task(bill_id: int, phone: str, message: str, bill_obj=None):
             print("Sending...")
             pyautogui.press('enter')
             
-            # 7. Close Tab? (User complained about closing)
-            # Let's NOT close it immediately so they can see it sent.
-            # Or close after a long delay.
-            # If user does multiple bills, tabs might pile up.
-            # Compromise: Wait 10 seconds then close Ctrl+W
+            # 7. Close Tab (Safely)
             time.sleep(8)
-            pyautogui.hotkey('ctrl', 'w')
+            
+            print("Attempting to close WhatsApp tab...")
+            # Verify focus AGAIN before closing
+            is_focused = focus_whatsapp_window()
+            
+            if is_focused:
+                print("WhatsApp verified in focus. Closing tab...")
+                pyautogui.hotkey('ctrl', 'w')
+            else:
+                print("WARNING: Could not verify WhatsApp focus. SKIPPING CLOSE to protect other tabs.")
             
         else:
             print("No image to send.")
@@ -346,4 +386,60 @@ def send_whatsapp_message(
     
     background_tasks.add_task(send_whatsapp_task, db_bill.id, db_bill.customer_phone, message, db_bill)
     
+    background_tasks.add_task(send_whatsapp_task, db_bill.id, db_bill.customer_phone, message, db_bill)
+    
     return {"status": "success", "detail": "Message scheduled in background"}
+
+
+@router.delete("/cleanup")
+def cleanup_old_data(
+    retention_days: int = Query(..., description="Number of days of data to keep. Older data will be deleted."),
+    db: Session = Depends(database.get_db)
+):
+    """
+    Deletes bills and associated invoice images older than the specified retention period.
+    """
+    try:
+        # Calculate cutoff date
+        cutoff_date = datetime.datetime.now() - datetime.timedelta(days=retention_days)
+        print(f"Cleanup Started. Deleting data older than: {cutoff_date}")
+
+        # Find bills to delete
+        bills_to_delete = db.query(models.Bill).filter(models.Bill.date < cutoff_date).all()
+        
+        deleted_bills_count = 0
+        deleted_images_count = 0
+        
+        # Base directory for images
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        invoices_dir = os.path.join(base_dir, "invoices")
+
+        for bill in bills_to_delete:
+            # 1. Delete Image File
+            try:
+                filename = f"invoice_{bill.id}.png"
+                file_path = os.path.join(invoices_dir, filename)
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    deleted_images_count += 1
+            except Exception as e:
+                print(f"Error deleting image for bill {bill.id}: {e}")
+
+            # 2. Delete Bill Record (Cascade deletes items)
+            db.delete(bill)
+            deleted_bills_count += 1
+            
+        db.commit()
+        
+        return {
+            "status": "success", 
+            "message": f"Cleanup complete. Deleted {deleted_bills_count} bills and {deleted_images_count} images.",
+            "deleted_bills": deleted_bills_count,
+            "deleted_images": deleted_images_count
+        }
+
+    except Exception as e:
+        print(f"Cleanup Error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))

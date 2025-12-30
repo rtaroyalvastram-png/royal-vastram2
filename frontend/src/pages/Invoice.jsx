@@ -40,14 +40,25 @@ const Invoice = () => {
             </div>
 
             {/* Shop Header */}
-            <div className="text-center border-b-2 border-amber-600 pb-8 mb-8 relative">
-                <img src="/logo.jpg" alt="Logo" className="absolute left-8 top-0 w-24 h-24 object-contain hidden md:block" onError={(e) => e.target.style.display = 'none'} />
-                <h1 className="text-4xl font-bold uppercase tracking-widest text-amber-800" style={{ fontFamily: 'serif' }}>Royal Vastram</h1>
-                <p className="text-gray-700 mt-2 font-medium">#58 Mookambika Nilaya, 3rd Main Road, 11th Cross</p>
-                <p className="text-gray-700">Ramesh Nagara, Marathahalli, Bangalore - 560037</p>
-                <div className="flex justify-center mt-3 text-sm text-gray-600">
-                    <p>Ph: +91 96119 61979</p>
+            {/* Shop Header */}
+            <div className="flex justify-between items-start border-b-2 border-amber-600 pb-8 mb-8">
+                {/* Left: Logo */}
+                <div className="w-32 flex-shrink-0">
+                    <img src="/logo.jpg" alt="Logo" className="w-full h-auto object-contain hidden md:block print:block" onError={(e) => e.target.style.display = 'none'} />
                 </div>
+
+                {/* Center: Detail */}
+                <div className="flex-1 text-center px-4">
+                    <h1 className="text-4xl font-bold uppercase tracking-widest text-amber-800 whitespace-nowrap" style={{ fontFamily: 'serif' }}>Royal Vastram</h1>
+                    <p className="text-gray-700 mt-2 font-medium">#58 Mookambika Nilaya, 3rd Main Road, 11th Cross</p>
+                    <p className="text-gray-700">Ramesh Nagara, Marathahalli, Bangalore - 560037</p>
+                    <div className="flex justify-center mt-3 text-sm text-gray-600">
+                        <p>Ph: +91 9611961979</p>
+                    </div>
+                </div>
+
+                {/* Right: Spacer to keep text centered */}
+                <div className="w-32 flex-shrink-0 hidden md:block print:block"></div>
             </div>
 
             {/* Invoice Info */}

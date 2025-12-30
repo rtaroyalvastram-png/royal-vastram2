@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash, Save, Printer } from 'lucide-react';
+import { Plus, Trash, Save, Printer, CheckCircle } from 'lucide-react';
 import api from '../api/axios';
 
 const CreateBill = () => {
@@ -64,10 +64,22 @@ const CreateBill = () => {
         e.preventDefault();
         setLoading(true);
         try {
+            const now = new Date();
+            // Create a date object from the 'date' string (YYYY-MM-DD)
+            // We append the current time to it
+            const [year, month, day] = date.split('-').map(Number);
+
+            // Create a Local Date object with the selected date and current time
+            const localDate = new Date(year, month - 1, day, now.getHours(), now.getMinutes(), now.getSeconds());
+
+            // Format to YYYY-MM-DDTHH:mm:ss manually to avoid UTC conversion
+            const pad = (n) => n.toString().padStart(2, '0');
+            const localISOString = `${localDate.getFullYear()}-${pad(localDate.getMonth() + 1)}-${pad(localDate.getDate())}T${pad(localDate.getHours())}:${pad(localDate.getMinutes())}:${pad(localDate.getSeconds())}`;
+
             const payload = {
                 customer_name: customer.name,
                 customer_phone: customer.phone,
-                date: new Date(date).toISOString(),
+                date: localISOString,
                 total_amount: calculateTotal(),
                 items: items.map(item => ({
                     item_name: item.item_name,
@@ -88,13 +100,6 @@ const CreateBill = () => {
 
             const response = await api.post('/bills/', payload);
             setBillId(response.data.id);
-            // alert('Bill saved successfully!');
-            // Show success message with WhatsApp hint if paid
-            let successMsg = 'Bill created successfully!';
-            if (paymentStatus === 'Paid' && customer.phone) {
-                successMsg += ' Invoice scheduled for WhatsApp.';
-            }
-            alert(successMsg);
         } catch (error) {
             console.error('Error saving bill:', error);
             alert('Failed to save bill. Please try again.');
@@ -103,41 +108,7 @@ const CreateBill = () => {
         }
     };
 
-    if (billId) {
-        return (
-            <div className="flex flex-col items-center justify-center p-12 bg-white rounded-lg shadow space-y-4">
-                <div className="p-4 bg-green-100 rounded-full">
-                    <Save className="w-8 h-8 text-green-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900">Bill Saved Successfully!</h2>
-                <div className="flex gap-4">
-                    <button
-                        onClick={() => {
-                            setBillId(null);
-                            setCustomer({ name: '', phone: '' });
-                            setItems([{ item_name: '', price: '', quantity: 1, item_total: 0 }]);
-                            setDate(new Date().toISOString().split('T')[0]);
-                            setPaymentStatus('Unpaid');
-                            setPaymentMode('Cash');
-                            setPaymentMode('Cash');
-                            setDiscount(0);
-                            setDiscountType('Amount');
-                        }}
-                        className="px-6 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
-                    >
-                        Create Another
-                    </button>
-                    <button
-                        onClick={() => window.open(`/invoice/${billId}`, '_blank')}
-                        className="flex items-center gap-2 px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                    >
-                        <Printer className="w-5 h-5" />
-                        Print Invoice
-                    </button>
-                </div>
-            </div>
-        );
-    }
+
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
@@ -389,6 +360,51 @@ const CreateBill = () => {
                     </button>
                 </div>
             </form >
+
+            {/* Success Modal */}
+            {billId && (
+                <div className="fixed inset-0 flex items-center justify-center p-4 z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+                        <div className="text-center">
+                            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+                                <CheckCircle className="h-10 w-10 text-green-600" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-gray-900 mb-2">Bill Saved Successfully!</h3>
+                            <p className="text-gray-500 mb-6">
+                                Invoice #{billId.toString().padStart(6, '0')} has been generated.
+                                {paymentStatus === 'Paid' && customer.phone && " WhatsApp message scheduled."}
+                            </p>
+
+                            <div className="space-y-3">
+                                <button
+                                    onClick={() => window.open(`/invoice/${billId}`, '_blank')}
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium"
+                                >
+                                    <Printer className="w-5 h-5" />
+                                    Print Invoice
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        setBillId(null);
+                                        setCustomer({ name: '', phone: '' });
+                                        setItems([{ item_name: '', price: '', quantity: 1, item_total: 0 }]);
+                                        setDate(new Date().toISOString().split('T')[0]);
+                                        setPaymentStatus('Unpaid');
+                                        setPaymentMode('Cash');
+                                        setDiscount(0);
+                                        setDiscountType('Amount');
+                                    }}
+                                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium"
+                                >
+                                    <Plus className="w-5 h-5" />
+                                    Create Another Bill
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div >
     );
 };

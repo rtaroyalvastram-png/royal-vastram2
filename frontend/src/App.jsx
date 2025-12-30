@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import CreateBill from './pages/CreateBill';
 import ViewBills from './pages/ViewBills';
 import Invoice from './pages/Invoice';
+import Settings from './pages/Settings';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/create" element={<CreateBill />} />
               <Route path="/bills" element={<ViewBills />} />
+              <Route path="/settings" element={<Settings />} />
             </Routes>
           </Layout>
         } />
