@@ -2,6 +2,28 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../api/axios';
 
+const numberToIndianWords = (num) => {
+    const a = [
+        '', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ',
+        'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '
+    ];
+    const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+    const inWords = (n) => {
+        if ((n = n.toString()).length > 9) return 'overflow';
+        let n_array = ('000000000' + n).slice(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+        if (!n_array) return;
+        let str = '';
+        str += (n_array[1] != 0) ? (a[Number(n_array[1])] || b[n_array[1][0]] + ' ' + a[n_array[1][1]]) + 'Crore ' : '';
+        str += (n_array[2] != 0) ? (a[Number(n_array[2])] || b[n_array[2][0]] + ' ' + a[n_array[2][1]]) + 'Lakh ' : '';
+        str += (n_array[3] != 0) ? (a[Number(n_array[3])] || b[n_array[3][0]] + ' ' + a[n_array[3][1]]) + 'Thousand ' : '';
+        str += (n_array[4] != 0) ? (a[Number(n_array[4])] || b[n_array[4][0]] + ' ' + a[n_array[4][1]]) + 'Hundred ' : '';
+        str += (n_array[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n_array[5])] || b[n_array[5][0]] + ' ' + a[n_array[5][1]]) : '';
+        return str;
+    };
+    return inWords(num);
+};
+
 const Invoice = () => {
     const { id } = useParams();
     const [bill, setBill] = useState(null);
@@ -53,7 +75,7 @@ const Invoice = () => {
                     <p className="text-gray-700 mt-2 font-medium">#58 Mookambika Nilaya, 3rd Main Road, 11th Cross</p>
                     <p className="text-gray-700">Ramesh Nagara, Marathahalli, Bangalore - 560037</p>
                     <div className="flex justify-center mt-3 text-sm text-gray-600">
-                        <p>Ph: +91 9611961979</p>
+                        <p>Ph: +91 9110611979</p>
                     </div>
                 </div>
 
@@ -84,6 +106,9 @@ const Invoice = () => {
                         <th className="text-left py-3 px-4 uppercase text-xs tracking-wider">Item Name</th>
                         <th className="text-right py-3 px-4 uppercase text-xs tracking-wider">Price</th>
                         <th className="text-right py-3 px-4 uppercase text-xs tracking-wider">Qty</th>
+                        {bill.items.some(i => i.discount > 0) && (
+                            <th className="text-right py-3 px-4 uppercase text-xs tracking-wider">Disc</th>
+                        )}
                         <th className="text-right py-3 px-4 uppercase text-xs tracking-wider">Total</th>
                     </tr>
                 </thead>
@@ -93,6 +118,9 @@ const Invoice = () => {
                             <td className="py-3 px-4">{item.item_name}</td>
                             <td className="text-right py-3 px-4">₹{item.price.toFixed(2)}</td>
                             <td className="text-right py-3 px-4">{item.quantity}</td>
+                            {bill.items.some(i => i.discount > 0) && (
+                                <td className="text-right py-3 px-4 text-red-600">-₹{item.discount ? item.discount.toFixed(2) : '0.00'}</td>
+                            )}
                             <td className="text-right py-3 px-4 font-bold text-gray-800">₹{item.item_total.toFixed(2)}</td>
                         </tr>
                     ))}
@@ -100,33 +128,42 @@ const Invoice = () => {
             </table>
 
             {/* Totals */}
-            <div className="flex justify-end pt-4">
-                <div className="w-72 bg-gray-800 text-white p-6 rounded-lg shadow-lg">
+            <div className="flex flex-col items-end pt-4">
+                <div className="w-72 bg-white text-gray-900 border border-gray-300 p-6 rounded-lg">
                     <div className="flex justify-between text-xl font-medium">
                         <span>Grand Total</span>
-                        <span className="text-amber-400 font-bold">₹{bill.total_amount.toFixed(2)}</span>
+                        <span className="font-bold">₹{bill.total_amount.toFixed(2)}</span>
                     </div>
                     {bill.discount > 0 && (
-                        <div className="flex justify-between text-sm mt-2 text-gray-300">
+                        <div className="flex justify-between text-sm mt-2 text-gray-600">
                             <span>Discount</span>
                             <span>- ₹{bill.discount.toFixed(2)}</span>
                         </div>
                     )}
                 </div>
+                {/* Amount in Words - Now below the total box */}
+                <div className="w-72 mt-2 text-right">
+                    <p className="text-sm font-medium text-gray-600 italic">
+                        Amount in Words:<br />
+                        <span className="text-gray-900 not-italic">{numberToIndianWords(Math.round(bill.total_amount))} Only</span>
+                    </p>
+                </div>
             </div>
 
             {/* Footer */}
-            <div className="mt-16 text-center text-sm text-gray-500">
-                <h4 className="font-bold text-gray-800 mb-2">Terms & Conditions</h4>
-                <ul className="text-xs space-y-1">
-                    <li>1. Goods once sold will not be taken back or exchanged.</li>
-                    <li>2. No return/exchange on discounted items.</li>
-                    <li>3. Please check the saree before leaving the shop.</li>
-                    <li>4. Minor color or weaving variations are not defects.</li>
-                    <li>5. We are not responsible for damage after purchase.</li>
-                    <li>6. Disputes subject to Bangalore jurisdiction only</li>
+            <div className="mt-16 text-left text-sm text-gray-500">
+                <h4 className="font-bold text-gray-800 mb-2 text-xs uppercase">Terms & Conditions</h4>
+                <ul className="text-xs space-y-1 text-left list-disc pl-4">
+                    <li>Goods once sold will not be taken back or exchanged.</li>
+                    <li>No return/exchange on discounted items.</li>
+                    <li>Please check the saree before leaving the shop.</li>
+                    <li>Minor color or weaving variations are not defects.</li>
+                    <li>We are not responsible for damage after purchase.</li>
+                    <li>Disputes subject to Bangalore jurisdiction only</li>
                 </ul>
-                <p className="mt-4 font-medium text-amber-800">Thank you for shopping with Royal Vastram!</p>
+                <p className="mt-8 font-serif text-center text-amber-800 italic text-lg">
+                    "Thanks for shopping with us. We hope this saree adds beauty to your special moments"
+                </p>
             </div>
 
             <style>

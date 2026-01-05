@@ -7,6 +7,7 @@ const ViewBills = () => {
     const navigate = useNavigate();
     const [bills, setBills] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [exporting, setExporting] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
     // Filter States
@@ -46,11 +47,17 @@ const ViewBills = () => {
     const fetchBills = async () => {
         setLoading(true);
         try {
-            const params = getFilterParams();
-            // Use the filter endpoint which returns all matching records (or switch to main if needed)
-            // Ideally we use /bills/filter for explicit filtering
-            const response = await api.get('/bills/filter', { params });
-            setBills(response.data);
+            // If filter is 'all', utilize the main /bills endpoint which is simple and robust
+            if (filterType === 'all' && !searchTerm) {
+                const response = await api.get('/bills/');
+                setBills(response.data);
+            } else {
+                const params = getFilterParams();
+                // Add search term to params if backend supported it, but backend uses separate customer_name param
+                // For now, client side search is implemented, so we just fetch based on date filters
+                const response = await api.get('/bills/filter', { params });
+                setBills(response.data);
+            }
         } catch (error) {
             console.error('Failed to fetch bills', error);
         } finally {
@@ -59,6 +66,7 @@ const ViewBills = () => {
     };
 
     const handleExport = async () => {
+        setExporting(true);
         try {
             const params = getFilterParams();
             const response = await api.get('/bills/export', {
@@ -74,6 +82,9 @@ const ViewBills = () => {
             link.remove();
         } catch (error) {
             console.error('Export failed', error);
+            alert('Export failed. Please try again.');
+        } finally {
+            setExporting(false);
         }
     };
 
@@ -146,10 +157,20 @@ const ViewBills = () => {
 
                     <button
                         onClick={handleExport}
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+                        disabled={exporting}
+                        className={`flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg transition-colors shadow-sm ${exporting ? 'opacity-75 cursor-not-allowed' : 'hover:bg-indigo-700'}`}
                     >
-                        <Download className="w-4 h-4" />
-                        Export
+                        {exporting ? (
+                            <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                Exporting...
+                            </>
+                        ) : (
+                            <>
+                                <Download className="w-4 h-4" />
+                                Export
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
@@ -161,6 +182,7 @@ const ViewBills = () => {
                             <th className="px-6 py-4">Bill ID</th>
                             <th className="px-6 py-4">Date</th>
                             <th className="px-6 py-4">Customer</th>
+                            <th className="px-6 py-4">Phone</th>
                             <th className="px-6 py-4">Status</th>
                             <th className="px-6 py-4">Items</th>
                             <th className="px-6 py-4 text-right">Amount</th>
@@ -176,7 +198,9 @@ const ViewBills = () => {
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="font-medium text-gray-900">{bill.customer_name}</div>
-                                    <div className="text-xs text-gray-500">{bill.customer_phone}</div>
+                                </td>
+                                <td className="px-6 py-4 text-gray-500">
+                                    {bill.customer_phone}
                                 </td>
                                 <td className="px-6 py-4">
                                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${bill.status === 'Paid'

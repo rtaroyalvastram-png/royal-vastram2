@@ -55,20 +55,38 @@ def create_invoice_image(bill):
         
         # --- 1. HEADER SECTION ---
         # Logo (if exists)
+        # --- 1. HEADER SECTION ---
+        # Logo (if exists)
         try:
             # Locate logo relative to this file: backend/utils/invoice_gen.py -> .../frontend/public/logo.jpg
-            # Go up 3 levels: utils -> backend -> root
             base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-            logo_path = os.path.join(base_dir, "frontend", "public", "logo.jpg")
             
-            print(f"DEBUG: Looking for logo at: {logo_path}")
-            if os.path.exists(logo_path):
+            # Possible paths to check
+            possible_paths = [
+                os.path.join(base_dir, "frontend", "public", "logo.jpg"),
+                os.path.join(base_dir, "frontend", "public", "logo.png"),
+                os.path.join(base_dir, "public", "logo.jpg"), # Fallback
+                "C:\\Users\\91974\\OneDrive\\Desktop\\royalvastram\\frontend\\public\\logo.jpg" # Absolute fallback
+            ]
+            
+            logo_path = None
+            for p in possible_paths:
+                if os.path.exists(p):
+                    logo_path = p
+                    break
+            
+            print(f"DEBUG: Logo Path Resolution: {logo_path}")
+            
+            if logo_path and os.path.exists(logo_path):
                 logo = Image.open(logo_path)
-                logo.thumbnail((180, 180))
+                # Resize to fit nicely within 180x180 but keep aspect ratio
+                logo.thumbnail((180, 180), Image.Resampling.LANCZOS)
+                
+                # Paste
                 img.paste(logo, (padding, 40))
                 print("DEBUG: Logo pasted successfully.")
             else:
-                print("DEBUG: Logo file not found.")
+                print("DEBUG: Logo file not found in any expected location.")
         except Exception as e:
             print(f"DEBUG: Error loading logo: {e}")
 
@@ -77,7 +95,7 @@ def create_invoice_image(bill):
         draw.text((center_x, 60), "ROYAL VASTRAM", font=font_serif_large, fill=color_amber_dark, anchor="ms")
         draw.text((center_x, 120), "#58 Mookambika Nilaya, 3rd Main Road, 11th Cross", font=font_sans_med, fill=color_gray_text, anchor="ms")
         draw.text((center_x, 155), "Ramesh Nagara, Marathahalli, Bangalore - 560037", font=font_sans_med, fill=color_gray_text, anchor="ms")
-        draw.text((center_x, 190), "Ph: +91 96119 61979", font=font_sans_small, fill=color_gray_light, anchor="ms")
+        draw.text((center_x, 190), "Ph: +91 9110611979", font=font_sans_small, fill=color_gray_light, anchor="ms")
 
         # Divider Line
         draw.line((padding + 50, 230, width - padding - 50, 230), fill=color_amber_dark, width=3)
@@ -119,15 +137,33 @@ def create_invoice_image(bill):
         draw.rectangle((padding, table_y, width - padding, table_y + table_header_height), fill=color_header_bg)
         
         # Columns: Item (L), Price (R), Qty (R), Total (R)
-        col_x_item = padding + 30
-        col_x_price = width - padding - 450
-        col_x_qty = width - padding - 250
-        col_x_total = width - padding - 30
+        # Check if we need a discount column
+        has_item_discount = any((getattr(i, 'discount', 0) or 0) > 0 for i in bill.items)
+
+        # Columns Configuration
+        # Default: Item (L), Price (R), Qty (R), Total (R)
+        # With Disc: Item (L), Price (R), Qty (R), Disc (R), Total (R)
         
+        col_x_item = padding + 20
+        
+        if has_item_discount:
+            col_x_price = width - padding - 500
+            col_x_qty = width - padding - 350
+            col_x_disc = width - padding - 200
+            col_x_total = width - padding - 20
+        else:
+            col_x_price = width - padding - 450
+            col_x_qty = width - padding - 250
+            col_x_total = width - padding - 30
+
         y_text = table_y + (table_header_height // 2)
         draw.text((col_x_item, y_text), "ITEM NAME", font=font_sans_small, fill=color_white, anchor="lm")
         draw.text((col_x_price, y_text), "PRICE", font=font_sans_small, fill=color_white, anchor="rm")
         draw.text((col_x_qty, y_text), "QTY", font=font_sans_small, fill=color_white, anchor="rm")
+        
+        if has_item_discount:
+            draw.text((col_x_disc, y_text), "DISC", font=font_sans_small, fill=color_white, anchor="rm")
+            
         draw.text((col_x_total, y_text), "TOTAL", font=font_sans_small, fill=color_white, anchor="rm")
 
         # Rows
@@ -140,9 +176,17 @@ def create_invoice_image(bill):
             
             row_mid = current_y + (row_height // 2)
             
-            draw.text((col_x_item, row_mid), str(item.item_name)[:50], font=font_sans_med, fill=color_black, anchor="lm")
+            # Truncate item name slightly more if we have discount col
+            max_char = 40 if has_item_discount else 50
+            
+            draw.text((col_x_item, row_mid), str(item.item_name)[:max_char], font=font_sans_med, fill=color_black, anchor="lm")
             draw.text((col_x_price, row_mid), f"Rs {item.price:.2f}", font=font_sans_med, fill=color_black, anchor="rm")
             draw.text((col_x_qty, row_mid), str(item.quantity), font=font_sans_med, fill=color_black, anchor="rm")
+            
+            if has_item_discount:
+                 disc_val = getattr(item, 'discount', 0) or 0
+                 draw.text((col_x_disc, row_mid), f"-{disc_val:.2f}", font=font_sans_med, fill=color_amber_dark, anchor="rm")
+
             draw.text((col_x_total, row_mid), f"Rs {item.item_total:.2f}", font=font_sans_bold, fill=color_black, anchor="rm")
             
             current_y += row_height
@@ -150,31 +194,34 @@ def create_invoice_image(bill):
         # --- 4. TOTALS SECTION ---
         total_section_y = current_y + 30
         
-        # Total Box (Right Aligned) - INCREASED WIDTH TO PREVENT OVERLAP
+        # Amount in Words (Left Side) - REMOVED, moving down
+
+        # Total Box (Right Aligned)
         total_box_width = 500
         total_box_x = width - padding - total_box_width
         
-        # Background
-        draw.rectangle((total_box_x, total_section_y, width - padding, total_section_y + 120), fill=color_header_bg, outline=color_black)
+        # Background - REMOVED COLOR, now white with border
+        draw.rectangle((total_box_x, total_section_y, width - padding, total_section_y + 120), fill=color_white, outline=color_black, width=2)
         
         # Calculate Logic
         subtotal = sum([i.item_total for i in bill.items])
         discount = getattr(bill, 'discount', 0.0) or 0.0
-        # Grand Total Text
         
-        # Adjusted positions for overlap safety
-        draw.text((total_box_x + 30, total_section_y + 60), "GRAND TOTAL", font=font_sans_bold, fill=color_white, anchor="lm")
-        draw.text((width - padding - 30, total_section_y + 60), f"Rs {bill.total_amount:.2f}", font=load_font("arialbd.ttf", 36), fill=color_highlight, anchor="rm")
+        # Grand Total Text (Black Text)
+        draw.text((total_box_x + 30, total_section_y + 60), "GRAND TOTAL", font=font_sans_bold, fill=color_black, anchor="lm")
+        draw.text((width - padding - 30, total_section_y + 60), f"Rs {bill.total_amount:.2f}", font=load_font("arialbd.ttf", 36), fill=color_black, anchor="rm")
 
-        if discount > 0:
-             pass
+        # Amount in Words (Below the Total Box)
+        words = num_to_indian_words(int(round(bill.total_amount)))
+        words_y = total_section_y + 140
+        draw.text((width - padding, words_y), "Amount in Words:", font=font_sans_small, fill=color_gray_text, anchor="ra")
+        draw.text((width - padding, words_y + 30), f"{words} Only", font=font_sans_med, fill=color_black, anchor="ra")
 
         # --- 5. FOOTER ---
-        # INCREASED SPACING to prevent cutoff
         footer_y = total_section_y + 180
         
-        # Terms
-        draw.text((center_x, footer_y), "Terms & Conditions", font=font_sans_bold, fill=color_black, anchor="ms")
+        # Terms Header
+        draw.text((padding + 30, footer_y), "Terms & Conditions", font=font_sans_bold, fill=color_black, anchor="ls")
         
         terms = [
             "1. Goods once sold will not be taken back or exchanged.",
@@ -185,21 +232,15 @@ def create_invoice_image(bill):
             "6. Disputes subject to Bangalore jurisdiction only"
         ]
         
-        term_y_cursor = footer_y + 40
+        term_y_cursor = footer_y + 15
         for term in terms:
-            draw.text((center_x, term_y_cursor), term, font=font_sans_small, fill=color_gray_text, anchor="ms")
+            draw.text((padding + 40, term_y_cursor), term, font=font_sans_small, fill=color_gray_text, anchor="ls")
             term_y_cursor += 30
             
-        # Extra padding at bottom
-        draw.text((center_x, term_y_cursor + 40), "Thank you for shopping with Royal Vastram!", font=font_sans_med, fill=color_amber_dark, anchor="ms")
+        # Footer Text (Centered)
+        final_msg = '"Thanks for shopping with us. We hope this saree adds beauty to your special moments"'
+        draw.text((center_x, term_y_cursor + 60), final_msg, font=load_font("timesi.ttf", 26), fill=color_amber_dark, anchor="ms")
         
-        # Extend image if content pushes past
-        final_y = term_y_cursor + 100
-        if final_y > total_height:
-             # Crop/Resize is hard on existing canvas, but we allocated footer_height=400 which should be enough.
-             # If cropping happens, it's likely calculate height was short.
-             pass
-
         # --- SAVE ---
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         invoices_dir = os.path.join(base_dir, "invoices")
@@ -210,8 +251,6 @@ def create_invoice_image(bill):
         abs_path = os.path.join(invoices_dir, filename)
         img.save(abs_path, quality=100)
         
-        # PDF Removed as per user request
-        
         return abs_path, None
 
     except Exception as e:
@@ -219,3 +258,42 @@ def create_invoice_image(bill):
         import traceback
         traceback.print_exc()
         return None, None
+
+def num_to_indian_words(n):
+    """
+    Converts a number to Indian currency words format.
+    """
+    a = [
+        '', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ',
+        'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '
+    ]
+    b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
+
+    def in_words(num):
+        if num == 0: return ""
+        if num > 9:
+            s = str(num)
+            n_array = ('000000000' + s)[-9:]
+            # Splitting: Crore(2), Lakh(2), Thousand(2), Hundred(1), Ten(2)
+            # RegEx style split manual
+            # indices: 01 23 45 6 78
+            c = int(n_array[0:2])
+            l = int(n_array[2:4])
+            t = int(n_array[4:6])
+            h = int(n_array[6])
+            te = int(n_array[7:9])
+            
+            str_out = ""
+            if c > 0: str_out += (a[c] if c < 20 else b[c//10] + ' ' + a[c%10]) + 'Crore '
+            if l > 0: str_out += (a[l] if l < 20 else b[l//10] + ' ' + a[l%10]) + 'Lakh '
+            if t > 0: str_out += (a[t] if t < 20 else b[t//10] + ' ' + a[t%10]) + 'Thousand '
+            if h > 0: str_out += (a[h] if h < 20 else b[h//10] + ' ' + a[h%10]) + 'Hundred '
+            if te > 0:
+                if str_out != "": str_out += "and "
+                str_out += (a[te] if te < 20 else b[te//10] + ' ' + a[te%10])
+            
+            return str_out.strip()
+        else:
+             return a[num].strip()
+
+    return in_words(n)

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Union
 from datetime import datetime
 
 class BillItemBase(BaseModel):
@@ -7,6 +7,7 @@ class BillItemBase(BaseModel):
     price: float
     quantity: int
     item_total: float
+    discount: float = 0.0
 
 class BillItemCreate(BillItemBase):
     pass
@@ -20,12 +21,12 @@ class BillItem(BillItemBase):
 
 class BillBase(BaseModel):
     customer_name: str
-    customer_phone: str
+    customer_phone: Union[str, None] = None
     date: datetime
     total_amount: float
     discount: float = 0.0
     status: str = "Unpaid"
-    payment_mode: Optional[str] = None
+    payment_mode: Union[str, None] = None
 
 class BillCreate(BillBase):
     items: List[BillItemCreate]

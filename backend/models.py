@@ -25,6 +25,7 @@ class BillItem(Base):
     item_name = Column(String)
     price = Column(Float)
     quantity = Column(Integer)
+    discount = Column(Float, default=0.0)
     item_total = Column(Float)
 
     bill = relationship("Bill", back_populates="items")

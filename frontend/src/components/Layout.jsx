@@ -12,7 +12,6 @@ const Layout = ({ children }) => {
         { name: 'Dashboard', path: '/', icon: LayoutDashboard },
         { name: 'Create Bill', path: '/create', icon: PlusCircle },
         { name: 'View Bills', path: '/bills', icon: FileText },
-        { name: 'Settings', path: '/settings', icon: ShoppingBag }, // Reusing ShoppingBag or use Settings icon if available
     ];
 
     return (
