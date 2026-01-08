@@ -200,20 +200,40 @@ def create_invoice_image(bill):
         total_box_width = 500
         total_box_x = width - padding - total_box_width
         
-        # Background - REMOVED COLOR, now white with border
-        draw.rectangle((total_box_x, total_section_y, width - padding, total_section_y + 120), fill=color_white, outline=color_black, width=2)
-        
         # Calculate Logic
-        subtotal = sum([i.item_total for i in bill.items])
-        discount = getattr(bill, 'discount', 0.0) or 0.0
+        gross_subtotal = sum([i.price * i.quantity for i in bill.items])
+        total_discount = gross_subtotal - bill.total_amount
         
-        # Grand Total Text (Black Text)
-        draw.text((total_box_x + 30, total_section_y + 60), "GRAND TOTAL", font=font_sans_bold, fill=color_black, anchor="lm")
-        draw.text((width - padding - 30, total_section_y + 60), f"Rs {bill.total_amount:.2f}", font=load_font("arialbd.ttf", 36), fill=color_black, anchor="rm")
+        # Determine lines to print
+        lines = []
+        lines.append(("Subtotal", f"Rs {gross_subtotal:.2f}", color_gray_text, font_sans_med))
+        if total_discount > 0.01:
+             lines.append(("Discount", f"- Rs {total_discount:.2f}", (220, 38, 38), font_sans_med)) # Red color
+        
+        # Grand Total line
+        lines.append(("Grand Total", f"Rs {bill.total_amount:.2f}", color_black, font_sans_bold))
+
+        # Box Dimensions
+        line_height = 40
+        box_padding = 20
+        box_h = (len(lines) * line_height) + (box_padding * 2)
+        
+        # Draw Box
+        draw.rectangle((total_box_x, total_section_y, width - padding, total_section_y + box_h), fill=color_white, outline=color_black, width=2)
+        
+        # Draw Lines
+        cursor_y = total_section_y + box_padding + 10 # slightly down for first line center
+        
+        for label, value, color, font in lines:
+             # Draw Label
+             draw.text((total_box_x + 20, cursor_y), label, font=font, fill=color, anchor="lm")
+             # Draw Value
+             draw.text((width - padding - 20, cursor_y), value, font=font, fill=color, anchor="rm")
+             cursor_y += line_height
 
         # Amount in Words (Below the Total Box)
         words = num_to_indian_words(int(round(bill.total_amount)))
-        words_y = total_section_y + 140
+        words_y = total_section_y + box_h + 20
         draw.text((width - padding, words_y), "Amount in Words:", font=font_sans_small, fill=color_gray_text, anchor="ra")
         draw.text((width - padding, words_y + 30), f"{words} Only", font=font_sans_med, fill=color_black, anchor="ra")
 

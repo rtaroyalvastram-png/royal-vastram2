@@ -130,16 +130,29 @@ const Invoice = () => {
             {/* Totals */}
             <div className="flex flex-col items-end pt-4">
                 <div className="w-72 bg-white text-gray-900 border border-gray-300 p-6 rounded-lg">
-                    <div className="flex justify-between text-xl font-medium">
-                        <span>Grand Total</span>
-                        <span className="font-bold">₹{bill.total_amount.toFixed(2)}</span>
-                    </div>
-                    {bill.discount > 0 && (
-                        <div className="flex justify-between text-sm mt-2 text-gray-600">
-                            <span>Discount</span>
-                            <span>- ₹{bill.discount.toFixed(2)}</span>
-                        </div>
-                    )}
+                    {(() => {
+                        const grossSubtotal = bill.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+                        const totalDiscount = grossSubtotal - bill.total_amount;
+
+                        return (
+                            <>
+                                <div className="flex justify-between text-gray-600 mb-2">
+                                    <span>Subtotal</span>
+                                    <span>₹{grossSubtotal.toFixed(2)}</span>
+                                </div>
+                                {totalDiscount > 0.01 && (
+                                    <div className="flex justify-between text-red-500 mb-2">
+                                        <span>Discount</span>
+                                        <span>- ₹{totalDiscount.toFixed(2)}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between text-xl font-bold border-t pt-2 mt-2">
+                                    <span>Grand Total</span>
+                                    <span>₹{bill.total_amount.toFixed(2)}</span>
+                                </div>
+                            </>
+                        );
+                    })()}
                 </div>
                 {/* Amount in Words - Now below the total box */}
                 <div className="w-72 mt-2 text-right">

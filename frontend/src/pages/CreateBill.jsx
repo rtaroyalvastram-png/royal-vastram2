@@ -110,8 +110,22 @@ const CreateBill = () => {
         return value;
     };
 
+    const calculateGrossTotal = () => {
+        return items.reduce((acc, item) => {
+            return acc + ((parseFloat(item.price) || 0) * (parseInt(item.quantity) || 0));
+        }, 0);
+    };
+
+    const calculateTotalDiscount = () => {
+        if (discountScope === 'transaction') {
+            return calculateDiscountAmount();
+        } else {
+            return calculateItemLevelDiscountTotal();
+        }
+    };
+
     const calculateTotal = () => {
-        return calculateSubtotal() - calculateDiscountAmount();
+        return calculateGrossTotal() - calculateTotalDiscount();
     };
 
     const handleSubmit = async (e) => {
@@ -155,7 +169,7 @@ const CreateBill = () => {
                         item_total: parseFloat(item.item_total)
                     };
                 }),
-                discount: calculateDiscountAmount(),
+                discount: calculateTotalDiscount(),
                 status: paymentStatus,
                 payment_mode: paymentStatus === 'Paid' ? paymentMode : null
             };
@@ -393,21 +407,13 @@ const CreateBill = () => {
                         <div className="flex-1 max-w-sm space-y-3">
                             <div className="flex justify-between text-gray-600">
                                 <span>Subtotal</span>
-                                <span>₹{calculateSubtotal().toFixed(2)}</span>
+                                <span>₹{calculateGrossTotal().toFixed(2)}</span>
                             </div>
 
-                            {/* Show discount line depending on scope */}
-                            {discountScope === 'transaction' ? (
-                                <div className="flex justify-between text-red-500 font-medium">
-                                    <span>Discount</span>
-                                    <span>- ₹{calculateDiscountAmount().toFixed(2)}</span>
-                                </div>
-                            ) : (
-                                <div className="flex justify-between text-red-500 font-medium">
-                                    <span>Total Item Discounts</span>
-                                    <span>- ₹{calculateItemLevelDiscountTotal().toFixed(2)}</span>
-                                </div>
-                            )}
+                            <div className="flex justify-between text-red-500 font-medium">
+                                <span>Discount</span>
+                                <span>- ₹{calculateTotalDiscount().toFixed(2)}</span>
+                            </div>
 
                             <div className="pt-3 border-t border-gray-200 flex justify-between items-center">
                                 <span className="text-lg font-bold text-gray-900">Grand Total</span>
