@@ -192,7 +192,7 @@ def create_bill(
     db.refresh(db_bill)
 
     if db_bill.status == "Paid" and db_bill.customer_phone:
-        message = f"Dear {db_bill.customer_name}, here is your invoice for Rs {db_bill.total_amount}. Thanks for shopping with us. We hope this saree adds beauty to your special moments (Bill ID: {db_bill.id})"
+        message = f"Dear Mr/Mrs {db_bill.customer_name}, here is your invoice for Rs {db_bill.total_amount}. Thanks for shopping with us. We hope this saree adds beauty to your special moments (Bill ID: {db_bill.id})"
         background_tasks.add_task(send_whatsapp_task, db_bill.id, db_bill.customer_phone, message, db_bill)
 
     return db_bill
@@ -383,7 +383,7 @@ def send_whatsapp_message(
     if not db_bill.customer_phone:
         raise HTTPException(status_code=400, detail="Customer phone number missing")
         
-    message = f"Dear {db_bill.customer_name}, here is your invoice for Rs {db_bill.total_amount}. Thanks for shopping with us. We hope this saree adds beauty to your special moments (Bill ID: {db_bill.id})"
+    message = f"Dear Mr/Mrs {db_bill.customer_name}, here is your invoice for Rs {db_bill.total_amount}. Thanks for shopping with us. We hope this saree adds beauty to your special moments (Bill ID: {db_bill.id})"
     
     background_tasks.add_task(send_whatsapp_task, db_bill.id, db_bill.customer_phone, message, db_bill)
     

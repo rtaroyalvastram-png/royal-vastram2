@@ -93,8 +93,8 @@ def create_invoice_image(bill):
         # Text (Centered)
         center_x = width // 2
         draw.text((center_x, 60), "ROYAL VASTRAM", font=font_serif_large, fill=color_amber_dark, anchor="ms")
-        draw.text((center_x, 120), "#58 Mookambika Nilaya, 3rd Main Road, 11th Cross", font=font_sans_med, fill=color_gray_text, anchor="ms")
-        draw.text((center_x, 155), "Ramesh Nagara, Marathahalli, Bangalore - 560037", font=font_sans_med, fill=color_gray_text, anchor="ms")
+        draw.text((center_x, 120), "#58 Shop no. 2, Mookambika Nilaya, 3rd Main Road, 11th Cross", font=font_sans_med, fill=color_gray_text, anchor="ms")
+        draw.text((center_x, 155), "Rameshnagar, Marathahalli, Bangalore - 560037", font=font_sans_med, fill=color_gray_text, anchor="ms")
         draw.text((center_x, 190), "Ph: +91 9110611979", font=font_sans_small, fill=color_gray_light, anchor="ms")
 
         # Divider Line
@@ -110,7 +110,7 @@ def create_invoice_image(bill):
         # Left: Billed To
         text_x_left = padding + 40
         draw.text((text_x_left, info_y + 30), "BILLED TO", font=font_sans_xs, fill=color_amber_dark)
-        draw.text((text_x_left, info_y + 60), str(bill.customer_name), font=font_sans_bold, fill=color_black)
+        draw.text((text_x_left, info_y + 60), f"Mr/Mrs {str(bill.customer_name)}", font=font_sans_bold, fill=color_black)
         draw.text((text_x_left, info_y + 100), str(bill.customer_phone), font=font_sans_med, fill=color_gray_text)
         
         # Right: Invoice Details
@@ -144,7 +144,11 @@ def create_invoice_image(bill):
         # Default: Item (L), Price (R), Qty (R), Total (R)
         # With Disc: Item (L), Price (R), Qty (R), Disc (R), Total (R)
         
-        col_x_item = padding + 20
+        # Columns Configuration
+        # With S.No: S.No (L), Item (L), Price (R), Qty (R), Total (R)
+        
+        col_x_sno = padding + 10
+        col_x_item = padding + 80
         
         if has_item_discount:
             col_x_price = width - padding - 500
@@ -157,6 +161,7 @@ def create_invoice_image(bill):
             col_x_total = width - padding - 30
 
         y_text = table_y + (table_header_height // 2)
+        draw.text((col_x_sno, y_text), "Item No.", font=font_sans_small, fill=color_white, anchor="lm")
         draw.text((col_x_item, y_text), "ITEM NAME", font=font_sans_small, fill=color_white, anchor="lm")
         draw.text((col_x_price, y_text), "PRICE", font=font_sans_small, fill=color_white, anchor="rm")
         draw.text((col_x_qty, y_text), "QTY", font=font_sans_small, fill=color_white, anchor="rm")
@@ -177,8 +182,9 @@ def create_invoice_image(bill):
             row_mid = current_y + (row_height // 2)
             
             # Truncate item name slightly more if we have discount col
-            max_char = 40 if has_item_discount else 50
+            max_char = 38 if has_item_discount else 48
             
+            draw.text((col_x_sno, row_mid), str(index + 1), font=font_sans_med, fill=color_black, anchor="lm")
             draw.text((col_x_item, row_mid), str(item.item_name)[:max_char], font=font_sans_med, fill=color_black, anchor="lm")
             draw.text((col_x_price, row_mid), f"Rs {item.price:.2f}", font=font_sans_med, fill=color_black, anchor="rm")
             draw.text((col_x_qty, row_mid), str(item.quantity), font=font_sans_med, fill=color_black, anchor="rm")

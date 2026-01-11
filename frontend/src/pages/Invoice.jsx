@@ -72,8 +72,8 @@ const Invoice = () => {
                 {/* Center: Detail */}
                 <div className="flex-1 text-center px-4">
                     <h1 className="text-4xl font-bold uppercase tracking-widest text-amber-800 whitespace-nowrap" style={{ fontFamily: 'serif' }}>Royal Vastram</h1>
-                    <p className="text-gray-700 mt-2 font-medium">#58 Mookambika Nilaya, 3rd Main Road, 11th Cross</p>
-                    <p className="text-gray-700">Ramesh Nagara, Marathahalli, Bangalore - 560037</p>
+                    <p className="text-gray-700 mt-2 font-medium">#58 Shop no. 2, Mookambika Nilaya, 3rd Main Road, 11th Cross</p>
+                    <p className="text-gray-700">Rameshnagar, Marathahalli, Bangalore - 560037</p>
                     <div className="flex justify-center mt-3 text-sm text-gray-600">
                         <p>Ph: +91 9110611979</p>
                     </div>
@@ -87,7 +87,7 @@ const Invoice = () => {
             <div className="flex justify-between mb-8 bg-amber-50 p-6 rounded-lg border border-amber-100">
                 <div>
                     <p className="text-amber-800 text-xs uppercase tracking-wide font-bold mb-1">Billed To</p>
-                    <h3 className="font-bold text-xl text-gray-900">{bill.customer_name}</h3>
+                    <h3 className="font-bold text-xl text-gray-900">Mr/Mrs {bill.customer_name}</h3>
                     <p className="text-gray-600">{bill.customer_phone}</p>
                 </div>
                 <div className="text-right">
@@ -103,6 +103,7 @@ const Invoice = () => {
             <table className="w-full mb-8 border-collapse">
                 <thead>
                     <tr className="bg-gray-800 text-white">
+                        <th className="text-left py-3 px-4 uppercase text-xs tracking-wider">S.No</th>
                         <th className="text-left py-3 px-4 uppercase text-xs tracking-wider">Item Name</th>
                         <th className="text-right py-3 px-4 uppercase text-xs tracking-wider">Price</th>
                         <th className="text-right py-3 px-4 uppercase text-xs tracking-wider">Qty</th>
@@ -115,6 +116,7 @@ const Invoice = () => {
                 <tbody className="divide-y divide-gray-200">
                     {bill.items.map((item, index) => (
                         <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                            <td className="py-3 px-4">{index + 1}</td>
                             <td className="py-3 px-4">{item.item_name}</td>
                             <td className="text-right py-3 px-4">₹{item.price.toFixed(2)}</td>
                             <td className="text-right py-3 px-4">{item.quantity}</td>

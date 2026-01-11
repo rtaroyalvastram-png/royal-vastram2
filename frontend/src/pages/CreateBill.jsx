@@ -15,7 +15,7 @@ const CreateBill = () => {
 
     const [items, setItems] = useState([
 
-        { item_name: '', price: '', quantity: 1, discount: 0, discountType: 'Amount', item_total: 0 }
+        { item_name: '', price: '', quantity: 1, discount: 0, discountType: 'Percentage', item_total: 0 }
     ]);
     const [paymentStatus, setPaymentStatus] = useState('Unpaid');
     const [paymentMode, setPaymentMode] = useState('Cash');
@@ -61,7 +61,7 @@ const CreateBill = () => {
                 ...item,
                 item_total: (parseFloat(item.price) || 0) * (parseInt(item.quantity) || 0),
                 discount: 0, // Reset discount if switching scope
-                discountType: 'Amount'
+                discountType: 'Percentage'
             }));
             setItems(newItems);
         } else {
@@ -70,7 +70,7 @@ const CreateBill = () => {
     }, [discountScope]);
 
     const addItem = () => {
-        setItems([...items, { item_name: '', price: '', quantity: 1, discount: 0, discountType: 'Amount', item_total: 0 }]);
+        setItems([...items, { item_name: '', price: '', quantity: 1, discount: 0, discountType: 'Percentage', item_total: 0 }]);
     };
 
     const removeItem = (index) => {
@@ -287,6 +287,7 @@ const CreateBill = () => {
                                         required
                                         min="0"
                                         value={item.price}
+                                        onWheel={(e) => e.target.blur()}
                                         onChange={(e) => handleItemChange(index, 'price', e.target.value)}
                                         className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
                                         placeholder="0.00"
@@ -298,6 +299,7 @@ const CreateBill = () => {
                                         required
                                         min="1"
                                         value={item.quantity}
+                                        onWheel={(e) => e.target.blur()}
                                         onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
                                         className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
                                     />
@@ -309,18 +311,20 @@ const CreateBill = () => {
                                                 type="number"
                                                 min="0"
                                                 value={item.discount}
+                                                onWheel={(e) => e.target.blur()}
                                                 onChange={(e) => handleItemChange(index, 'discount', e.target.value)}
                                                 className="w-full px-3 py-2 rounded-l-lg border border-gray-300 focus:ring-2 focus:ring-red-500 text-red-600 border-r-0"
                                                 placeholder="0"
                                             />
-                                            <button
-                                                type="button"
-                                                onClick={() => handleItemChange(index, 'discountType', item.discountType === 'Amount' ? 'Percentage' : 'Amount')}
-                                                className="px-2 py-2 bg-gray-50 border border-l-0 border-gray-300 rounded-r-lg text-gray-600 hover:bg-gray-100 font-medium text-xs"
-                                                title="Toggle Discount Type"
+                                            <select
+                                                value={item.discountType}
+                                                onChange={(e) => handleItemChange(index, 'discountType', e.target.value)}
+                                                className="px-2 py-2 bg-gray-50 border border-l-0 border-gray-300 rounded-r-lg text-gray-700 hover:bg-gray-100 font-medium text-sm focus:ring-0 focus:border-gray-300 cursor-pointer outline-none"
+                                                title="Select Discount Type"
                                             >
-                                                {item.discountType === 'Percentage' ? '%' : '₹'}
-                                            </button>
+                                                <option value="Percentage">%</option>
+                                                <option value="Amount">₹</option>
+                                            </select>
                                         </div>
                                     </div>
                                 )}
@@ -386,6 +390,7 @@ const CreateBill = () => {
                                             type="number"
                                             min="0"
                                             value={discount}
+                                            onWheel={(e) => e.target.blur()}
                                             onChange={(e) => setDiscount(e.target.value)}
                                             className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500"
                                             placeholder="Enter value"

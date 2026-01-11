@@ -23,11 +23,19 @@ if !errorlevel! neq 0 (
 
 :: 1. Update
 echo [1/5] Updating...
-git pull origin main
+ping -n 1 8.8.8.8 >nul 2>&1
 if !errorlevel! neq 0 (
-    echo    ! Warning: Internet update failed. Using local version.
+    echo    ! Offline mode: No internet connection. Skipping update.
 ) else (
-    echo    > Updated successfully.
+    echo    > Checking for updates...
+    git pull origin main
+    if !errorlevel! neq 0 (
+        echo.
+        echo    ! UPDATE FAILED: You have local changes that prevent automatic update.
+        echo    ! Using your current local version.
+    ) else (
+        echo    > Updated successfully.
+    )
 )
 echo.
 
