@@ -47,7 +47,7 @@ const Invoice = () => {
     if (!bill) return <div className="p-8 text-center">Loading Invoice...</div>;
 
     return (
-        <div className="max-w-3xl mx-auto bg-white p-12 min-h-screen text-gray-900">
+        <div className="max-w-3xl mx-auto bg-white p-6 min-h-screen text-gray-900 text-sm">
             {/* Print Button - Hidden when printing */}
             <div className="fixed top-4 right-4 print:hidden">
                 <button
@@ -62,38 +62,37 @@ const Invoice = () => {
             </div>
 
             {/* Shop Header */}
-            {/* Shop Header */}
-            <div className="flex justify-between items-start border-b-2 border-amber-600 pb-8 mb-8">
+            <div className="flex justify-between items-start border-b border-amber-600 pb-4 mb-4">
                 {/* Left: Logo */}
-                <div className="w-32 flex-shrink-0">
+                <div className="w-24 flex-shrink-0">
                     <img src="/logo.jpg" alt="Logo" className="w-full h-auto object-contain hidden md:block print:block" onError={(e) => e.target.style.display = 'none'} />
                 </div>
 
                 {/* Center: Detail */}
                 <div className="flex-1 text-center px-4">
-                    <h1 className="text-4xl font-bold uppercase tracking-widest text-amber-800 whitespace-nowrap" style={{ fontFamily: 'serif' }}>Royal Vastram</h1>
-                    <p className="text-gray-700 mt-2 font-medium">#58 Shop no. 2, Mookambika Nilaya, 3rd Main Road, 11th Cross</p>
-                    <p className="text-gray-700">Rameshnagar, Marathahalli, Bangalore - 560037</p>
-                    <div className="flex justify-center mt-3 text-sm text-gray-600">
+                    <h1 className="text-3xl font-bold uppercase tracking-widest text-amber-800 whitespace-nowrap" style={{ fontFamily: 'serif' }}>Royal Vastram</h1>
+                    <p className="text-gray-700 mt-1 font-medium text-xs">#58 Shop no. 2, Mookambika Nilaya, 3rd Main Road, 11th Cross</p>
+                    <p className="text-gray-700 text-xs">Rameshnagar, Marathahalli, Bangalore - 560037</p>
+                    <div className="flex justify-center mt-1 text-xs text-gray-600">
                         <p>Ph: +91 9110611979</p>
                     </div>
                 </div>
 
                 {/* Right: Spacer to keep text centered */}
-                <div className="w-32 flex-shrink-0 hidden md:block print:block"></div>
+                <div className="w-24 flex-shrink-0 hidden md:block print:block"></div>
             </div>
 
             {/* Invoice Info */}
-            <div className="flex justify-between mb-8 bg-amber-50 p-6 rounded-lg border border-amber-100">
+            <div className="flex justify-between mb-4 bg-amber-50 p-4 rounded-lg border border-amber-100">
                 <div>
-                    <p className="text-amber-800 text-xs uppercase tracking-wide font-bold mb-1">Billed To</p>
-                    <h3 className="font-bold text-xl text-gray-900">Mr/Mrs {bill.customer_name}</h3>
-                    <p className="text-gray-600">{bill.customer_phone}</p>
+                    <p className="text-amber-800 text-[10px] uppercase tracking-wide font-bold mb-0.5">Billed To</p>
+                    <h3 className="font-bold text-lg text-gray-900">Mr/Mrs {bill.customer_name}</h3>
+                    <p className="text-gray-600 text-xs">{bill.customer_phone}</p>
                 </div>
                 <div className="text-right">
-                    <p className="text-amber-800 text-xs uppercase tracking-wide font-bold mb-1">Invoice Details</p>
-                    <h3 className="font-bold text-xl text-gray-900">#{bill.id.toString().padStart(6, '0')}</h3>
-                    <p className="text-gray-600">
+                    <p className="text-amber-800 text-[10px] uppercase tracking-wide font-bold mb-0.5">Invoice Details</p>
+                    <h3 className="font-bold text-lg text-gray-900">#{bill.id.toString().padStart(6, '0')}</h3>
+                    <p className="text-gray-600 text-xs">
                         {new Date(bill.date).toLocaleString()}
                     </p>
                 </div>
@@ -129,54 +128,62 @@ const Invoice = () => {
                 </tbody>
             </table>
 
-            {/* Totals */}
-            <div className="flex flex-col items-end pt-4">
-                <div className="w-72 bg-white text-gray-900 border border-gray-300 p-6 rounded-lg">
-                    {(() => {
-                        const grossSubtotal = bill.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-                        const totalDiscount = grossSubtotal - bill.total_amount;
+            {/* Totals & Terms Container */}
+            <div className="flex justify-between items-start mt-4">
 
-                        return (
-                            <>
-                                <div className="flex justify-between text-gray-600 mb-2">
-                                    <span>Subtotal</span>
-                                    <span>₹{grossSubtotal.toFixed(2)}</span>
-                                </div>
-                                {totalDiscount > 0.01 && (
-                                    <div className="flex justify-between text-red-500 mb-2">
-                                        <span>Discount</span>
-                                        <span>- ₹{totalDiscount.toFixed(2)}</span>
-                                    </div>
-                                )}
-                                <div className="flex justify-between text-xl font-bold border-t pt-2 mt-2">
-                                    <span>Grand Total</span>
-                                    <span>₹{bill.total_amount.toFixed(2)}</span>
-                                </div>
-                            </>
-                        );
-                    })()}
+                {/* Left Side: Terms & Conditions */}
+                <div className="text-left text-xs text-gray-500 w-1/2 pr-4">
+                    <h4 className="font-bold text-gray-800 mb-1 text-xs uppercase">Terms & Conditions</h4>
+                    <ul className="text-[10px] space-y-0.5 text-left list-disc pl-3">
+                        <li>Goods once sold will not be taken back or exchanged.</li>
+                        <li>No return/exchange on discounted items.</li>
+                        <li>Please check the saree before leaving the shop.</li>
+                        <li>Minor color or weaving variations are not defects.</li>
+                        <li>We are not responsible for damage after purchase.</li>
+                        <li>Disputes subject to Bangalore jurisdiction only</li>
+                    </ul>
                 </div>
-                {/* Amount in Words - Now below the total box */}
-                <div className="w-72 mt-2 text-right">
-                    <p className="text-sm font-medium text-gray-600 italic">
-                        Amount in Words:<br />
-                        <span className="text-gray-900 not-italic">{numberToIndianWords(Math.round(bill.total_amount))} Only</span>
-                    </p>
+
+                {/* Right Side: Totals */}
+                <div className="w-1/2 flex flex-col items-end">
+                    <div className="w-64 bg-white text-gray-900 border border-gray-300 p-3 rounded-lg text-sm">
+                        {(() => {
+                            const grossSubtotal = bill.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+                            const totalDiscount = grossSubtotal - bill.total_amount;
+
+                            return (
+                                <>
+                                    <div className="flex justify-between text-gray-600 mb-1">
+                                        <span>Subtotal</span>
+                                        <span>₹{grossSubtotal.toFixed(2)}</span>
+                                    </div>
+                                    {totalDiscount > 0.01 && (
+                                        <div className="flex justify-between text-red-500 mb-1">
+                                            <span>Discount</span>
+                                            <span>- ₹{totalDiscount.toFixed(2)}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between text-lg font-bold border-t pt-1 mt-1">
+                                        <span>Grand Total</span>
+                                        <span>₹{bill.total_amount.toFixed(2)}</span>
+                                    </div>
+                                </>
+                            );
+                        })()}
+                    </div>
+                    {/* Amount in Words */}
+                    <div className="w-64 mt-1 text-right">
+                        <p className="text-[10px] font-medium text-gray-600 italic leading-tight">
+                            Amount in Words:<br />
+                            <span className="text-gray-900 not-italic">{numberToIndianWords(Math.round(bill.total_amount))} Only</span>
+                        </p>
+                    </div>
                 </div>
             </div>
 
             {/* Footer */}
-            <div className="mt-16 text-left text-sm text-gray-500">
-                <h4 className="font-bold text-gray-800 mb-2 text-xs uppercase">Terms & Conditions</h4>
-                <ul className="text-xs space-y-1 text-left list-disc pl-4">
-                    <li>Goods once sold will not be taken back or exchanged.</li>
-                    <li>No return/exchange on discounted items.</li>
-                    <li>Please check the saree before leaving the shop.</li>
-                    <li>Minor color or weaving variations are not defects.</li>
-                    <li>We are not responsible for damage after purchase.</li>
-                    <li>Disputes subject to Bangalore jurisdiction only</li>
-                </ul>
-                <p className="mt-8 font-serif text-center text-amber-800 italic text-lg">
+            <div className="mt-8 text-center">
+                <p className="font-serif text-amber-800 italic text-sm">
                     "Thanks for shopping with us. We hope this saree adds beauty to your special moments"
                 </p>
             </div>
